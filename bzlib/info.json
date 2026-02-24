@@ -1,9 +1,9 @@
 {
-    "name": "bzutil",
+    "name": "bzlib",
     "version": "1.0.0",
     "factorio_version": "2.0",
-    "title": "BZ Util",
-    "description": "Util code for BZ mods",
+    "title": "BZ Lib",
+    "description": "Library code for BZ mods",
     "author": "Brevven, cackling fiend",
     "homepage": "https://discord.gg/ufvFUJtVwk",
     "dependencies": [

@@ -1,5 +1,5 @@
-# BZ Util
-Moves the util code from all bz mods to this mod.
+# BZ Lib
+Moves the lib code from all bz mods to this mod.
 
 ## Credits
 - Brevven (original code)
