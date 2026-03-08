@@ -3,11 +3,10 @@
 -- WARNING WARNING WARNING
 
 local futil = require("util")
-local me = require("me")
+local me
 local util = {}
 
-util.me = me
-util.get_setting = util.me.get_setting
+util.me = nil
 
 util.bz = {}
 util.bz.carbon = mods["bzcarbon"] and "bzcarbon" or mods["bzcarbon2"] and "bzcarbon2"
@@ -75,6 +74,11 @@ end
 util.vacuum_icon = { icon = "__base__/graphics/icons/fluid/steam.png", tint = { r = .1, g = .1, b = .5, a = .5 } }
 util.vacuum_icon_small = { icon = "__base__/graphics/icons/fluid/steam.png", tint = { r = .1, g = .1, b = .5, a = .5 }, scale = 0.25, shift = { -8, -8 }, }
 util.vacuum_vis = { r = .1, g = .1, b = .5 }
+
+function util.initialize(them)
+  me = them
+  util.me = me
+end
 
 function util.item(item, quantity, probability)
   if not quantity then
