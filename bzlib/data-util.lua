@@ -1591,6 +1591,7 @@ function util.add_icon(recipe_name, icon, options)
       data.raw.recipe[recipe_name].icon = nil
       data.raw.recipe[recipe_name].icon_size = nil
     end
+    data.raw.recipe[recipe_name].icons = data.raw.recipe[recipe_name].icons or {}
     table.insert(data.raw.recipe[recipe_name].icons, icon)
   end
 end
