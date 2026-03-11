@@ -1,0 +1,6 @@
+---------------------------------------------------------------------------------------------------
+Version: 1.0.1
+Date: 11.03.2026
+  Bug Fixes:
+    - K2: Fix bug in matter recipe generation
+    - Fix bug in add_icon when icons table is nil
