@@ -124,13 +124,13 @@ end
 
 allbypass = {}
 if get_setting("bz-recipe-bypass") then
-  for recipe in string.gmatch(me.get_setting("bz-recipe-bypass"), '[^",%s]+') do
+  for recipe in string.gmatch(util.get_setting("bz-recipe-bypass"), '[^",%s]+') do
     allbypass[recipe] = true
   end
 end
 
 function util.is_foundry()
-  return util.bz.foundry and not me.get_setting("bzfoundry-minimal")
+  return util.bz.foundry and not util.get_setting("bzfoundry-minimal")
 end
 
 function should_force(options)
@@ -138,7 +138,7 @@ function should_force(options)
 end
 
 function bypass(recipe_name)
-  if me.bypass[recipe_name] then
+  if me and me.bypass[recipe_name] then
     return true
   end
   if allbypass[recipe_name] then
@@ -423,7 +423,7 @@ function util.add_gleba_rock(resource, amount_min, amount_max)
     })
     local probability = data.raw["simple-entity"]["gleba-rock"].autoplace.probability_expression
     -- A lot more common near starting point when aps gleba
-    local factor = (mods["any-planet-start"] and me.get_setting("aps-planet") == "gleba" and 20) or 1
+    local factor = (mods["any-planet-start"] and util.get_setting("aps-planet") == "gleba" and 20) or 1
     data.raw["simple-entity"]["gleba-rock"].autoplace.probability_expression = probability .. [[*
     if(distance_from_nearest_point{x = x, y = y, points = starting_positions} < 200, ]] .. factor .. [[,
        if(distance_from_nearest_point{x = x, y = y, points = starting_positions} < 700,
@@ -432,8 +432,8 @@ function util.add_gleba_rock(resource, amount_min, amount_max)
 
   end
   if data.raw.item[resource] then
-    amount_min = (amount_min or 10) * ((mods["any-planet-start"] and me.get_setting("aps-planet") == "gleba" and 4) or 1)
-    amount_max = (amount_max or 20) * ((mods["any-planet-start"] and me.get_setting("aps-planet") == "gleba" and 4) or 1)
+    amount_min = (amount_min or 10) * ((mods["any-planet-start"] and util.get_setting("aps-planet") == "gleba" and 4) or 1)
+    amount_max = (amount_max or 20) * ((mods["any-planet-start"] and util.get_setting("aps-planet") == "gleba" and 4) or 1)
     util.add_minable_result(
       "simple-entity", "gleba-rock",
       { type = "item", name = resource, amount_min = amount_min, amount_max = amount_max })
@@ -536,7 +536,7 @@ function util.se_landfill(params)
         type = "recipe",
         icons = {
           { icon = "__base__/graphics/icons/landfill.png", icon_size = 64, icon_mipmaps = 3 },
-          { icon = "__" .. me.name .. "__/graphics/icons/" .. params.ore .. ".png", icon_size = params.icon_size, scale = 0.33 * 64 / params.icon_size },
+          { icon = "__" .. (me and me.name or params.ore) .. "__/graphics/icons/" .. params.ore .. ".png", icon_size = params.icon_size, scale = 0.33 * 64 / params.icon_size },
         },
         energy_required = 1,
         enabled = false,
@@ -644,7 +644,7 @@ function util.se_matter(params)
           icon_size = 64, scale = 0.5 },
         { icon = "__space-exploration-graphics__/graphics/icons/fluid/particle-stream.png",
           icon_size = 64, scale = 0.33, shift = { 8, -8 } },
-        { icon = "__" .. util.me.name .. "__/graphics/icons/" .. params.ore .. ".png",
+        { icon = "__" .. (me and me.name or params.ore) .. "__/graphics/icons/" .. params.ore .. ".png",
           icon_size = params.icon_size, scale = 0.33 * 64 / params.icon_size, shift = { -8, 8 } },
         { icon = "__space-exploration-graphics__/graphics/icons/transition-arrow.png",
           icon_size = 64, scale = 0.5 },
@@ -683,7 +683,7 @@ function util.se_matter(params)
             icon_size = 64, scale = 0.5 },
           { icon = "__space-exploration-graphics__/graphics/icons/fluid/particle-stream.png",
             icon_size = 64, scale = 0.33, shift = { -8, 8 } },
-          { icon = "__" .. util.me.name .. "__/graphics/icons/" .. params.ore .. ".png",
+          { icon = "__" .. (me and me.name or params.ore) .. "__/graphics/icons/" .. params.ore .. ".png",
             icon_size = params.icon_size, scale = 0.33 * 64 / params.icon_size, shift = { 8, -8 } },
           { icon = "__space-exploration-graphics__/graphics/icons/transition-arrow.png",
             icon_size = 64, scale = 0.5 },
@@ -967,7 +967,7 @@ function util.add_ingredient(recipe_name, ingredient, quantity, options)
   end
   local is_fluid = not not data.raw.fluid[ingredient]
   if data.raw.recipe[recipe_name] and (util.get_item(ingredient) or is_fluid) then
-    me.add_modified(recipe_name)
+    if me then me.add_modified(recipe_name) end
     prepare_redo_recycling(recipe_name)
     add_ingredient(data.raw.recipe[recipe_name], ingredient, quantity, is_fluid)
   end
@@ -1130,7 +1130,7 @@ function util.replace_ingredient(recipe_name, old, new, amount, multiply, option
     return
   end
   if data.raw.recipe[recipe_name] and (data.raw.item[new] or data.raw.fluid[new]) and (data.raw.item[old] or data.raw.fluid[old]) then
-    me.add_modified(recipe_name)
+    if me then me.add_modified(recipe_name) end
     prepare_redo_recycling(recipe_name)
     replace_ingredient(data.raw.recipe[recipe_name], old, new, amount, multiply)
   end
@@ -1164,7 +1164,7 @@ function util.remove_ingredient(recipe_name, old, options)
     return
   end
   if data.raw.recipe[recipe_name] then
-    me.add_modified(recipe_name)
+    if me then me.add_modified(recipe_name) end
     prepare_redo_recycling(recipe_name)
     remove_ingredient(data.raw.recipe[recipe_name], old)
   end
@@ -1965,6 +1965,10 @@ function util.sum_products(recipe_name)
     return sum
   end
   return 0
+end
+
+function util.add_productivity(recipe)
+  data.raw.recipe[recipe].allow_productivity = true
 end
 
 function util.set_vtk_dcm_ingredients()
