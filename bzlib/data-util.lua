@@ -1018,7 +1018,7 @@ function util.set_ingredient(recipe_name, ingredient, quantity, options)
   end
   if data.raw.recipe[recipe_name] and data.raw.item[ingredient] then
     local is_fluid = not not data.raw.fluid[ingredient]
-    me.add_modified(recipe_name)
+    if me then me.add_modified(recipe_name) end
     prepare_redo_recycling(recipe_name)
     set_ingredient(data.raw.recipe[recipe_name], ingredient, quantity, is_fluid)
   end
@@ -1192,7 +1192,7 @@ function util.replace_some_product(recipe_name, old, old_amount, new, new_amount
   end
   local is_fluid = not not data.raw.fluid[new]  -- NOTE CURRENTLY UNUSUED
   if data.raw.recipe[recipe_name] and (data.raw.item[new] or is_fluid) then
-    me.add_modified(recipe_name)
+    if me then me.add_modified(recipe_name) end
     prepare_redo_recycling(recipe_name)
     replace_some_product(data.raw.recipe[recipe_name], old, old_amount, new, new_amount, is_fluid)
   end
@@ -1226,7 +1226,7 @@ function util.replace_some_ingredient(recipe_name, old, old_amount, new, new_amo
   end
   local is_fluid = not not data.raw.fluid[new]
   if data.raw.recipe[recipe_name] and (data.raw.item[new] or is_fluid) then
-    me.add_modified(recipe_name)
+    if me then me.add_modified(recipe_name) end
     prepare_redo_recycling(recipe_name)
     replace_some_ingredient(data.raw.recipe[recipe_name], old, old_amount, new, new_amount, is_fluid)
   end
@@ -1254,7 +1254,7 @@ function util.set_product_probability(recipe_name, product, probability, options
     return
   end
   if data.raw.recipe[recipe_name] then
-    me.add_modified(recipe_name)
+    if me then me.add_modified(recipe_name) end
     prepare_redo_recycling(recipe_name)
     set_product_probability(data.raw.recipe[recipe_name], product, probability)
   end
@@ -1278,7 +1278,7 @@ function util.set_product_amount(recipe_name, product, amount, options)
     return
   end
   if data.raw.recipe[recipe_name] then
-    me.add_modified(recipe_name)
+    if me then me.add_modified(recipe_name) end
     prepare_redo_recycling(recipe_name)
     set_product_amount(data.raw.recipe[recipe_name], product, amount)
   end
@@ -1309,7 +1309,7 @@ function util.multiply_recipe(recipe_name, multiple, options)
     return
   end
   if data.raw.recipe[recipe_name] then
-    me.add_modified(recipe_name)
+    if me then me.add_modified(recipe_name) end
     prepare_redo_recycling(recipe_name)
     multiply_recipe(data.raw.recipe[recipe_name], multiple)
   end
@@ -1351,7 +1351,7 @@ function util.multiply_ingredients(recipe_name, multiple, options)
     return
   end
   if data.raw.recipe[recipe_name] then
-    me.add_modified(recipe_name)
+    if me then me.add_modified(recipe_name) end
     prepare_redo_recycling(recipe_name)
     multiply_ingredients(data.raw.recipe[recipe_name], multiple)
   end
@@ -1392,7 +1392,7 @@ function util.remove_product(recipe_name, old, options)
     return
   end
   if data.raw.recipe[recipe_name] then
-    me.add_modified(recipe_name)
+    if me then me.add_modified(recipe_name) end
     prepare_redo_recycling(recipe_name)
     remove_product(data.raw.recipe[recipe_name], old)
   end
@@ -1475,7 +1475,7 @@ function util.set_recipe_time(recipe_name, time, options)
     return
   end
   if data.raw.recipe[recipe_name] then
-    me.add_modified(recipe_name)
+    if me then me.add_modified(recipe_name) end
     prepare_redo_recycling(recipe_name)
     set_recipe_time(data.raw.recipe[recipe_name], time)
   end
@@ -1495,7 +1495,7 @@ function util.multiply_time(recipe_name, factor, options)
     return
   end
   if data.raw.recipe[recipe_name] then
-    me.add_modified(recipe_name)
+    if me then me.add_modified(recipe_name) end
     prepare_redo_recycling(recipe_name)
     multiply_time(data.raw.recipe[recipe_name], factor)
   end
@@ -1515,7 +1515,7 @@ function util.add_time(recipe_name, amount, options)
     return
   end
   if data.raw.recipe[recipe_name] then
-    me.add_modified(recipe_name)
+    if me then me.add_modified(recipe_name) end
     prepare_redo_recycling(recipe_name)
     add_time(data.raw.recipe[recipe_name], amount)
   end
@@ -1542,7 +1542,7 @@ function util.set_category(recipe_name, category, options)
     return
   end
   if data.raw.recipe[recipe_name] and data.raw["recipe-category"][category] then
-    me.add_modified(recipe_name)
+    if me then me.add_modified(recipe_name) end
     prepare_redo_recycling(recipe_name)
     data.raw.recipe[recipe_name].category = category
   end
@@ -1554,7 +1554,7 @@ function util.set_subgroup(recipe_name, subgroup, options)
     return
   end
   if data.raw.recipe[recipe_name] and data.raw["item-subgroup"][subgroup] then
-    me.add_modified(recipe_name)
+    if me then me.add_modified(recipe_name) end
     data.raw.recipe[recipe_name].subgroup = subgroup
   end
 end
@@ -1574,7 +1574,7 @@ function util.add_icon(recipe_name, icon, options)
     return
   end
   if data.raw.recipe[recipe_name] then
-    me.add_modified(recipe_name)
+    if me then me.add_modified(recipe_name) end
     if not (data.raw.recipe[recipe_name].icons and #(data.raw.recipe[recipe_name].icons) > 0) then
       if data.raw.recipe[recipe_name].icon then
         data.raw.recipe[recipe_name].icons = { {
@@ -1609,7 +1609,7 @@ function util.set_icons(recipe_name, icons, options)
     return
   end
   if data.raw.recipe[recipe_name] then
-    me.add_modified(recipe_name)
+    if me then me.add_modified(recipe_name) end
     data.raw.recipe[recipe_name].icons = icons
     data.raw.recipe[recipe_name].icon = nil
     data.raw.recipe[recipe_name].icon_size = nil
@@ -1622,7 +1622,7 @@ function util.set_tech_icons(technology, icons, options)
     return
   end
   if data.raw.technology[technology] then
-    me.add_modified(technology)
+    if me then me.add_modified(technology) end
     data.raw.technology[technology].icons = icons
     data.raw.technology[technology].icon = nil
     data.raw.technology[technology].icon_size = nil
