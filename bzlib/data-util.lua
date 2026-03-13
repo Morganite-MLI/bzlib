@@ -80,6 +80,13 @@ function util.initialize(them)
   util.me = me
 end
 
+function util.get_setting(name)
+  if settings.startup[name] == nil then
+    return nil
+  end
+  return settings.startup[name].value
+end
+
 function util.item(item, quantity, probability)
   if not quantity then
     quantity = 1
