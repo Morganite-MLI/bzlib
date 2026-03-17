@@ -195,7 +195,7 @@ function util.add_shiftite_recipe(item, shiftites, quantity)
     data:extend({ {
                     type = "recipe",
                     name = name,
-                    localised_name = { "", { "item-name." .. item }, " ← Shiftite" },
+                    localised_name = { "", { "item-name." .. item }, " ↁEShiftite" },
                     category = "janus-shiftite",
                     subgroup = "janus-basic-from-shiftite",
                     ingredients = its,
@@ -550,9 +550,6 @@ function util.k2matter(params)
   else
     matter = require("__Krastorio2-spaced-out__/prototypes/libraries/matter")
   end
-  if mods["space-exploration"] then
-    params.k2matter.needs_stabilizer = true
-  end
   if not data.raw.technology[params.k2matter.unlocked_by] then
     local icon = ""
     if params.k2baseicon then
@@ -603,6 +600,11 @@ function util.k2matter(params)
     matter.make_deconversion_recipe(params.k2matter)
   else
     matter.make_recipes(params.k2matter)
+    if mods["space-exploration"] and not params.k2matter.needs_stabilizer then
+        util.add_ingredient("kr-matter-to-" .. params.k2matter.material.name, "se-kr-charged-basic-stabilizer", 1, {force = true})
+        util.add_product("kr-matter-to-" .. params.k2matter.material.name, { type = "item", name = "se-kr-charged-basic-stabilizer", amount = 1, probability = 0.199 }, {force = true})
+        util.add_product("kr-matter-to-" .. params.k2matter.material.name, { type = "item", name = "se-kr-basic-stabilizer", amount = 1, probability = 0.8 }, {force = true})
+    end
   end
 end
 
