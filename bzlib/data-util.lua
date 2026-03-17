@@ -1458,6 +1458,7 @@ function util.remove_raw(t, name)
     for i, elem in pairs(data.raw[t]) do
       if elem.name == name then
         data.raw[t][i] = nil
+        if mods.quality and t == "item" then util.remove_raw("recipe", name .. "-recycling") end
         break
       end
     end
