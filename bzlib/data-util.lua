@@ -1104,23 +1104,24 @@ function util.replace_ingredient(recipe_name, old, new, amount, multiply, option
     return
   end
   if data.raw.recipe[recipe_name] and (util.get_item(new) or data.raw.fluid[new]) then
-    if me then
-      me.add_modified(recipe_name)
-    end
-    prepare_redo_recycling(recipe_name)
-    replace_ingredient(data.raw.recipe[recipe_name], old, new, amount, multiply)
-  end
+    if replace_ingredient(data.raw.recipe[recipe_name], old, new, amount, multiply) then
+      if me then
+        me.add_modified(recipe_name)
+      end      prepare_redo_recycling(recipe_name)
+    end  end
 end
 
 function replace_ingredient(recipe, old, new, amount, multiply)
   if recipe ~= nil and recipe.ingredients ~= nil then
     for i, existing in pairs(recipe.ingredients) do
       if existing.name == new then
-        return
+        return false
       end
     end
+    local flag = false
     for i, ingredient in pairs(recipe.ingredients) do
       if ingredient.name == old then
+        flag = true
         ingredient.name = new
         if amount then
           if multiply then
@@ -1131,7 +1132,9 @@ function replace_ingredient(recipe, old, new, amount, multiply)
         end
       end
     end
+    return flag
   end
+  return false
 end
 
 -- Remove an ingredient from a recipe
@@ -2038,6 +2041,7 @@ function util.redo_recycling()
     for _, recipe in pairs(data.raw.recipe) do
       if recipe.redo_recycling then
         recycling.generate_recycling_recipe(recipe)
+        recipe.redo_recycling = false
       end
     end
     -- Find all recycling recipes that result in armor and make sure not to output more than 1
