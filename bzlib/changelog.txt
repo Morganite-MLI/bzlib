@@ -1,4 +1,9 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.1.2
+Date: 05.04.2026
+  Bug fixes:
+    - Fix get_item and use it everywhere (this should undo some major breaking changes from previous updates; sorry for the inconvenience)
+---------------------------------------------------------------------------------------------------
 Version: 1.1.1
 Date: 16.03.2026
   Bug fixes:
