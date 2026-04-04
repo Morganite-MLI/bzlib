@@ -27,30 +27,6 @@ util.titanium_processing = ""
 util.bismuth_plate = ""
 util.bismuth_processing = ""
 
-local item_sounds_helper = [[
-local item_sounds = require('__base__.prototypes.item_sounds')
-
-    inventory_move_sound = item_sounds.wire_inventory_move,
-    pick_sound = item_sounds.wire_inventory_pickup,
-    drop_sound = item_sounds.wire_inventory_move,
-
-    inventory_move_sound = item_sounds.metal_small_inventory_move,
-    pick_sound = item_sounds.metal_small_inventory_pickup,
-    drop_sound = item_sounds.metal_small_inventory_move,
-
-    inventory_move_sound = item_sounds.resource_inventory_move,
-    pick_sound = item_sounds.resource_inventory_pickup,
-    drop_sound = item_sounds.resource_inventory_move,
-
-    inventory_move_sound = item_sounds.brick_inventory_move,
-    pick_sound = item_sounds.brick_inventory_pickup,
-    drop_sound = item_sounds.brick_inventory_move,
-
-    inventory_move_sound = item_sounds.sulfur_inventory_move,
-    pick_sound = item_sounds.resource_inventory_pickup,
-    drop_sound = item_sounds.sulfur_inventory_move,
-]]
-
 util.A = { { "automation-science-pack", 1 } }
 util.AL = { { "automation-science-pack", 1 }, { "logistic-science-pack", 1 } }
 util.ALC = { { "automation-science-pack", 1 }, { "logistic-science-pack", 1 }, { "chemical-science-pack", 1 } }
@@ -85,6 +61,16 @@ function util.get_setting(name)
     return nil
   end
   return settings.startup[name].value
+end
+
+function util.get_item(name)
+  for type in pairs(defines.prototypes['item']) do
+    if data.raw[type] then
+      local item = data.raw[type][name]
+      if item then return item end
+    end
+  end
+  return nil
 end
 
 function util.item(item, quantity, probability)
@@ -192,13 +178,13 @@ function util.add_shiftite_recipe(item, shiftites, quantity)
   if not mods["janus"] then
     return
   end
-  if not data.raw.item[item] then
+  if not util.get_item(item) then
     return
   end
   local its = {}
   for _, shiftite in pairs(shiftites) do
     local it = "janus-shiftite-" .. shiftite
-    if data.raw.item[it] then
+    if util.get_item(it) then
       table.insert(its, util.item(it, quantity))
     end
   end
@@ -431,7 +417,7 @@ function util.add_gleba_rock(resource, amount_min, amount_max)
     ]]
 
   end
-  if data.raw.item[resource] then
+  if util.get_item(resource) then
     amount_min = (amount_min or 10) * ((mods["any-planet-start"] and util.get_setting("aps-planet") == "gleba" and 4) or 1)
     amount_max = (amount_max or 20) * ((mods["any-planet-start"] and util.get_setting("aps-planet") == "gleba" and 4) or 1)
     util.add_minable_result(
@@ -515,7 +501,7 @@ end
 function util.add_hot_metals(metals)
   if HotMetals and HotMetals.items then
     for _, metal in pairs(metals) do
-      if data.raw.item[metal] or (metal.name and data.raw.item[metal.name]) then
+      if util.get_item(metal) or (metal.name and util.get_item(metal.name)) then
         table.insert(HotMetals.items, metal)
       end
     end
@@ -940,26 +926,6 @@ function add_or_add_to_ingredient(recipe, ingredient, quantity)
   end
 end
 
-function util.get_item(name)
-  if data.raw.item[name] then
-    return data.raw.item[name]
-  end
-  if data.raw.armor[name] then
-    return data.raw.armor[name]
-  end
-  if data.raw.fluid[name] then
-    return data.raw.fluid[name]
-  end
-  if data.raw.capsule[name] then
-    return data.raw.capsule[name]
-  end
-  if data.raw["space-platform-starter-pack"] and data.raw["space-platform-starter-pack"][name] then
-    return data.raw["space-platform-starter-pack"][name]
-  end
-  -- TODO add more subtypes of item here
-  return nil
-end
-
 -- Add a given quantity of ingredient to a given recipe
 function util.add_ingredient(recipe_name, ingredient, quantity, options)
   if not should_force(options) and bypass(recipe_name) then
@@ -993,7 +959,7 @@ function util.add_ingredient_raw(recipe_name, ingredient, options)
   if not should_force(options) and bypass(recipe_name) then
     return
   end
-  if data.raw.recipe[recipe_name] and data.raw.item[ingredient.name] then
+  if data.raw.recipe[recipe_name] and util.get_item(ingredient.name) then
     me.add_modified(recipe_name)
     prepare_redo_recycling(recipe_name)
     add_ingredient_raw(data.raw.recipe[recipe_name], ingredient)
@@ -1016,7 +982,7 @@ function util.set_ingredient(recipe_name, ingredient, quantity, options)
   if not should_force(options) and bypass(recipe_name) then
     return
   end
-  if data.raw.recipe[recipe_name] and data.raw.item[ingredient] then
+  if data.raw.recipe[recipe_name] and util.get_item(ingredient) then
     local is_fluid = not not data.raw.fluid[ingredient]
     if me then me.add_modified(recipe_name) end
     prepare_redo_recycling(recipe_name)
@@ -1048,7 +1014,7 @@ function util.add_product(recipe_name, product, options)
     return
   end
   if data.raw.recipe[recipe_name] and
-    (data.raw.item[product.name] or data.raw.fluid[product.name]) then
+    (util.get_item(product.name) or data.raw.fluid[product.name]) then
     add_product(data.raw.recipe[recipe_name], product)
   end
 end
@@ -1129,7 +1095,7 @@ function util.replace_ingredient(recipe_name, old, new, amount, multiply, option
   if not should_force(options) and bypass(recipe_name) then
     return
   end
-  if data.raw.recipe[recipe_name] and (data.raw.item[new] or data.raw.fluid[new]) and (data.raw.item[old] or data.raw.fluid[old]) then
+  if data.raw.recipe[recipe_name] and (util.get_item(new) or data.raw.fluid[new]) then
     if me then me.add_modified(recipe_name) end
     prepare_redo_recycling(recipe_name)
     replace_ingredient(data.raw.recipe[recipe_name], old, new, amount, multiply)
@@ -1191,7 +1157,7 @@ function util.replace_some_product(recipe_name, old, old_amount, new, new_amount
     return
   end
   local is_fluid = not not data.raw.fluid[new]  -- NOTE CURRENTLY UNUSUED
-  if data.raw.recipe[recipe_name] and (data.raw.item[new] or is_fluid) then
+  if data.raw.recipe[recipe_name] and (util.get_item(new) or is_fluid) then
     if me then me.add_modified(recipe_name) end
     prepare_redo_recycling(recipe_name)
     replace_some_product(data.raw.recipe[recipe_name], old, old_amount, new, new_amount, is_fluid)
@@ -1225,7 +1191,7 @@ function util.replace_some_ingredient(recipe_name, old, old_amount, new, new_amo
     return
   end
   local is_fluid = not not data.raw.fluid[new]
-  if data.raw.recipe[recipe_name] and (data.raw.item[new] or is_fluid) then
+  if data.raw.recipe[recipe_name] and (util.get_item(new) or is_fluid) then
     if me then me.add_modified(recipe_name) end
     prepare_redo_recycling(recipe_name)
     replace_some_ingredient(data.raw.recipe[recipe_name], old, old_amount, new, new_amount, is_fluid)
@@ -1433,7 +1399,7 @@ function util.replace_product(recipe_name, old, new, options)
   if not should_force(options) and bypass(recipe_name) then
     return
   end
-  if data.raw.recipe[recipe_name] and (data.raw.item[new] or data.raw.fluid[new]) then
+  if data.raw.recipe[recipe_name] and (util.get_item(new) or data.raw.fluid[new]) then
     replace_product(data.raw.recipe[recipe_name], old, new, options)
   end
 end
@@ -1560,12 +1526,13 @@ function util.set_subgroup(recipe_name, subgroup, options)
 end
 
 -- Set item subgroup
-function util.set_item_subgroup(item, subgroup, options)
-  if not should_force(options) and bypass(item) then
+function util.set_item_subgroup(item_name, subgroup, options)
+  if not should_force(options) and bypass(item_name) then
     return
   end -- imperfect, close enough for now?
-  if data.raw.item[item] and data.raw["item-subgroup"][subgroup] then
-    data.raw.item[item].subgroup = subgroup
+  local item = util.get_item(item_name)
+  if item and data.raw["item-subgroup"][subgroup] then
+    item.subgroup = subgroup
   end
 end
 
@@ -1573,33 +1540,36 @@ function util.add_icon(recipe_name, icon, options)
   if not should_force(options) and bypass(recipe_name) then
     return
   end
-  if data.raw.recipe[recipe_name] then
+  local recipe = data.raw.recipe[recipe_name]
+  if recipe then
     if me then me.add_modified(recipe_name) end
-    if not (data.raw.recipe[recipe_name].icons and #(data.raw.recipe[recipe_name].icons) > 0) then
-      if data.raw.recipe[recipe_name].icon then
-        data.raw.recipe[recipe_name].icons = { {
-                                                 icon = data.raw.recipe[recipe_name].icon,
-                                                 icon_size = data.raw.recipe[recipe_name].icon_size,
-                                                 icon_mipmaps = data.raw.recipe[recipe_name].icon_mipmaps,
+    if not (recipe.icons and #(recipe.icons) > 0) then
+      local main_product = util.get_item(recipe.main_product)
+      local result = #recipe.results == 1 and util.get_item(recipe.results[1])
+      if recipe.icon then
+        recipe.icons = { {
+                                                 icon = recipe.icon,
+                                                 icon_size = recipe.icon_size,
+                                                 icon_mipmaps = recipe.icon_mipmaps,
                                                } }
-      elseif data.raw.item[data.raw.recipe[recipe_name].main_product] then
-        data.raw.recipe[recipe_name].icons = { {
-                                                 icon = data.raw.item[data.raw.recipe[recipe_name].main_product].icon,
-                                                 icon_size = data.raw.item[data.raw.recipe[recipe_name].main_product].icon_size,
-                                                 icon_mipmaps = data.raw.item[data.raw.recipe[recipe_name].main_product].icon_mipmaps,
+      elseif main_product then
+        recipe.icons = { {
+                                                 icon = main_product.icon,
+                                                 icon_size = main_product.icon_size,
+                                                 icon_mipmaps = main_product.icon_mipmaps,
                                                } }
-      elseif data.raw.item[data.raw.recipe[recipe_name].result] then
-        data.raw.recipe[recipe_name].icons = { {
-                                                 icon = data.raw.item[data.raw.recipe[recipe_name].result].icon,
-                                                 icon_size = data.raw.item[data.raw.recipe[recipe_name].result].icon_size,
-                                                 icon_mipmaps = data.raw.item[data.raw.recipe[recipe_name].result].icon_mipmaps,
+      elseif result then
+        recipe.icons = { {
+                                                 icon = result.icon,
+                                                 icon_size = result.icon_size,
+                                                 icon_mipmaps = result.icon_mipmaps,
                                                } }
       end
-      data.raw.recipe[recipe_name].icon = nil
-      data.raw.recipe[recipe_name].icon_size = nil
+      recipe.icon = nil
+      recipe.icon_size = nil
     end
-    data.raw.recipe[recipe_name].icons = data.raw.recipe[recipe_name].icons or {}
-    table.insert(data.raw.recipe[recipe_name].icons, icon)
+    recipe.icons = recipe.icons or {}
+    table.insert(recipe.icons, icon)
   end
 end
 
@@ -1631,20 +1601,22 @@ end
 
 -- Set recipe icons
 function util.set_item_icons(item_name, icons)
-  if data.raw.item[item_name] then
-    data.raw.item[item_name].icons = icons
-    data.raw.item[item_name].icon = nil
-    data.raw.item[item_name].icon_size = nil
+  local item = util.get_item(item_name)
+  if item then
+    item.icons = icons
+    item.icon = nil
+    item.icon_size = nil
   end
 end
 
 -- Gets an item or fluid icon
 function util.get_item_or_fluid_icon(name)
   icon = ""
-  if data.raw.item[name] then
-    icon = data.raw.item[name].icon
+  local item = util.get_item(name)
+  if item then
+    icon = item.icon
     if not icon then
-      icon = data.raw.item[name].icons[1].icon
+      icon = item.icons[1].icon
     end
   elseif data.raw.fluid[name] then
     icon = data.raw.fluid[name].icon
@@ -1741,7 +1713,7 @@ end
 
 -- Adds a result to a mineable type
 function util.add_minable_result(t, name, result)
-  if data.raw[t] and data.raw[t][name] and data.raw[t][name].minable and data.raw.item[result.name] then
+  if data.raw[t] and data.raw[t][name] and data.raw[t][name].minable and util.get_item(result.name) then
     if data.raw[t][name].minable.result and not data.raw[t][name].minable.results then
       data.raw[t][name].minable.results = {
         util.item(data.raw[t][name].minable.result, data.raw[t][name].minable.count) }
@@ -1818,7 +1790,7 @@ end
 
 function util.create_list()
   if #me.list > 0 then
-    if not data.raw.item[me.name .. "-list"] then
+    if not util.get_item(me.name .. "-list") then
       data:extend({ {
                       type = "item",
                       name = me.name .. "-list",
@@ -1843,7 +1815,8 @@ function util.create_list()
     end
 
     if #list > 0 then
-      data.raw.item[me.name .. "-list"].localised_description = encode(decode(data.raw.item[me.name .. "-list"].localised_description) .. "\n" .. table.concat(list, "\n"))
+      local item = util.get_item(me.name .. "-list")
+      item.localised_description = encode(decode(item.localised_description) .. "\n" .. table.concat(list, "\n"))
     end
   end
 end
