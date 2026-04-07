@@ -137,6 +137,12 @@ function bypass(recipe_name)
   end
 end
 
+function bzdebug(msg)
+    if bzlib_debug then
+        log(msg)
+    end
+end
+
 function util.fe_plus(sub)
   if mods["FactorioExtended-Plus-" .. sub] then
     return true
@@ -1101,20 +1107,34 @@ end
 --    Use amount to set an amount. If that amount is a multiplier instead of an exact amount, set multiply true.
 function util.replace_ingredient(recipe_name, old, new, amount, multiply, options)
   if not should_force(options) and bypass(recipe_name) then
+    bzdebug("Recipe bypassed.")
     return
   end
   if data.raw.recipe[recipe_name] and (util.get_item(new) or data.raw.fluid[new]) then
     if replace_ingredient(data.raw.recipe[recipe_name], old, new, amount, multiply) then
+      bzdebug("Recipe changed.")
       if me then
         me.add_modified(recipe_name)
-      end      prepare_redo_recycling(recipe_name)
-    end  end
+      end
+      prepare_redo_recycling(recipe_name)
+    end
+  else
+    local temp = "???"
+    if not data.raw.recipe[recipe_name] then
+        temp = recipe_name
+    elseif not (util.get_item(new) or data.raw.fluid[new]) then
+        temp = new
+    end
+    if temp == nil then temp = "nil" end  
+    bzdebug("Recipe or an ingredient does not exist: " .. temp)
+  end
 end
 
 function replace_ingredient(recipe, old, new, amount, multiply)
   if recipe ~= nil and recipe.ingredients ~= nil then
     for i, existing in pairs(recipe.ingredients) do
       if existing.name == new then
+        bzdebug("Recipe already has new ingredient.")
         return false
       end
     end
