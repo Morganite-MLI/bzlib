@@ -606,12 +606,18 @@ function util.k2matter(params)
     matter.make_deconversion_recipe(params.k2matter)
   else
     matter.make_recipes(params.k2matter)
-    if mods["space-exploration"] and not params.k2matter.needs_stabilizer then
-        util.add_ingredient("kr-matter-to-" .. params.k2matter.material.name, "se-kr-charged-basic-stabilizer", 1, {force = true})
-        util.add_product("kr-matter-to-" .. params.k2matter.material.name, { type = "item", name = "se-kr-charged-basic-stabilizer", amount = 1, probability = 0.199 }, {force = true})
-        util.add_product("kr-matter-to-" .. params.k2matter.material.name, { type = "item", name = "se-kr-basic-stabilizer", amount = 1, probability = 0.8 }, {force = true})
+    if not params.k2matter.needs_stabilizer then
+        util.add_basic_stabilizer(params.k2matter.material.name)
     end
   end
+end
+
+function util.add_basic_stabilizer(material_name)
+    if mods["space-exploration"] then
+        util.add_ingredient("kr-matter-to-" .. material_name, "se-kr-charged-basic-stabilizer", 1, {force = true})
+        util.add_product("kr-matter-to-" .. material_name, { type = "item", name = "se-kr-charged-basic-stabilizer", amount = 1, probability = 0.199 }, {force = true})
+        util.add_product("kr-matter-to-" .. material_name, { type = "item", name = "se-kr-basic-stabilizer", amount = 1, probability = 0.8 }, {force = true})
+    end
 end
 
 
@@ -1117,6 +1123,8 @@ function util.replace_ingredient(recipe_name, old, new, amount, multiply, option
         me.add_modified(recipe_name)
       end
       prepare_redo_recycling(recipe_name)
+    else
+        bzdebug("Recipe unchanged.")
     end
   else
     local temp = "???"
