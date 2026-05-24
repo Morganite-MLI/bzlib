@@ -1,4 +1,14 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.2.0
+Date: 24.05.2026
+  Thanks to Morganite for all the fixes
+  Bug fixes:
+    - Change util.k2matter to properly support Space Exploration's basic matter stabilizers
+    - Don't leave redo_recycling flag on recipes that don't need it anymore/at all
+    - Remove recycling recipes when items are deleted with util.remove_raw
+    - Change values in util.se_matter to reflect comparable values in the current game
+    - Make adding basic matter stabilizers it's own function
+---------------------------------------------------------------------------------------------------
 Version: 1.1.2
 Date: 05.04.2026
   Bug fixes:
