@@ -201,7 +201,7 @@ function util.add_shiftite_recipe(item, shiftites, quantity)
     data:extend({ {
                     type = "recipe",
                     name = name,
-                    localised_name = { "", { "item-name." .. item }, " ↁEShiftite" },
+                    localised_name = { "", { "item-name." .. item }, " ← Shiftite" },
                     category = "janus-shiftite",
                     subgroup = "janus-basic-from-shiftite",
                     ingredients = its,
