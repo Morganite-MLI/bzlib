@@ -80,7 +80,7 @@ function util.item(item, quantity, probability)
     quantity = 1
   end
   if probability then
-    return { type = "item", name = item, amount = quantity, probability = probability }
+    return { type = "item", name = item, amount = quantity, independent_probability = probability }
   else
     return { type = "item", name = item, amount = quantity }
   end
@@ -202,7 +202,7 @@ function util.add_shiftite_recipe(item, shiftites, quantity)
                     type = "recipe",
                     name = name,
                     localised_name = { "", { "item-name." .. item }, " ← Shiftite" },
-                    category = "janus-shiftite",
+                    categories = {"janus-shiftite"},
                     subgroup = "janus-basic-from-shiftite",
                     ingredients = its,
                     results = { util.item(item, 5) },
@@ -537,7 +537,7 @@ function util.se_landfill(params)
         hide_from_signal_gui = false,
         name = lname,
         localised_name = {"item-name.landfill"},
-        category = "hard-recycling",
+        categories = {"hard-recycling"},
         order = "z-b-" .. params.ore,
         subgroup = "terrain",
         results = { { type = "item", name = "landfill", amount = 1 } },
@@ -617,8 +617,8 @@ end
 function util.add_basic_stabilizer(material_name)
     if mods["space-exploration"] then
         util.add_ingredient("kr-matter-to-" .. material_name, "se-kr-charged-basic-stabilizer", 1, {force = true})
-        util.add_product("kr-matter-to-" .. material_name, { type = "item", name = "se-kr-charged-basic-stabilizer", amount = 1, probability = 0.199 }, {force = true})
-        util.add_product("kr-matter-to-" .. material_name, { type = "item", name = "se-kr-basic-stabilizer", amount = 1, probability = 0.8 }, {force = true})
+        util.add_product("kr-matter-to-" .. material_name, { type = "item", name = "se-kr-charged-basic-stabilizer", amount = 1, independent_probability = 0.199 }, {force = true})
+        util.add_product("kr-matter-to-" .. material_name, { type = "item", name = "se-kr-basic-stabilizer", amount = 1, independent_probability = 0.8 }, {force = true})
     end
 end
 
@@ -640,7 +640,7 @@ function util.se_matter(params)
       type = "recipe",
       name = fname,
       localised_name = { "recipe-name.se-matter-fusion-to", { "item-name." .. params.ore } },
-      category = "space-materialisation",
+      categories = {"space-materialisation"},
       subgroup = "materialisation",
       order = "a-b-z",
       icons = {
@@ -663,8 +663,8 @@ function util.se_matter(params)
       results = {
         { type = "item", name = params.ore, amount = params.quant_out },
         { type = "item", name = "se-contaminated-scrap", amount = 1 },
-        { type = "item", name = sedata, amount = 1, probability = .99 },
-        { type = "item", name = sejunk, amount = 1, probability = .01 },
+        { type = "item", name = sedata, amount = 1, independent_probability = .99 },
+        { type = "item", name = sejunk, amount = 1, independent_probability = .01 },
         { type = "fluid", name = "se-space-coolant-hot", amount = 25, ignored_by_stats = 25, ignored_by_productivity = 25 },
       }
     }
@@ -679,7 +679,7 @@ function util.se_matter(params)
         type = "recipe",
         name = lname,
         localised_name = { "recipe-name.se-kr-matter-liberation", { "item-name." .. params.ore } },
-        category = "space-materialisation",
+        categories = {"space-materialisation"},
         subgroup = "advanced-particle-stream",
         order = "a-b-z",
         icons = {
@@ -700,8 +700,8 @@ function util.se_matter(params)
           { type = "fluid", name = "se-particle-stream", amount = 500 },
         },
         results = {
-          { type = "item", name = "se-kr-matter-liberation-data", amount = 1, probability = .99 },
-          { type = "item", name = sejunk, amount = 1, probability = .01 },
+          { type = "item", name = "se-kr-matter-liberation-data", amount = 1, independent_probability = .99 },
+          { type = "item", name = sejunk, amount = 1, independent_probability = .01 },
           { type = "fluid", name = "se-particle-stream", amount = params.stream_out },
         }
       }
@@ -1263,7 +1263,7 @@ function replace_some_ingredient(recipe, old, old_amount, new, new_amount, is_fl
   end
 end
 
--- set the probability of a product. 
+-- set the probability of a product.  Only for independent probability.
 function util.set_product_probability(recipe_name, product, probability, options)
   if not should_force(options) and bypass(recipe_name) then
     return
@@ -1282,7 +1282,7 @@ function set_product_probability(recipe, product, probability)
     if recipe.results then
       for i, result in pairs(recipe.results) do
         if result.name == product then
-          result.probability = probability
+          result.independent_probability = probability
         end
       end
     end
@@ -1578,7 +1578,7 @@ function util.set_category(recipe_name, category, options)
       me.add_modified(recipe_name)
     end
     prepare_redo_recycling(recipe_name)
-    data.raw.recipe[recipe_name].category = category
+    data.raw.recipe[recipe_name].categories = {category}
   end
 end
 
@@ -2006,8 +2006,11 @@ function util.sum_products(recipe_name)
       elseif result.amount_min then
         amt = (result.amount_min + result.amount_max) / 2
       end
-      if result.probability then
-        amt = amt * result.probability
+      if result.independent_probability then
+        amt = amt * result.independent_probability
+      end
+      if result.shard_probability then
+        amt = amt * (result.shared_probability.max - result.shared_probability.min)
       end
       sum = sum + amt
     end
@@ -2035,7 +2038,7 @@ end
 function util.size_recycler_output()
   if data.raw.recipe["scrap-recycling"] and data.raw.recipe["scrap-recycling"].results then
     for i, entity in pairs(data.raw.furnace) do
-      if util.contains(entity.crafting_categories, "recycling-or-hand-crafting") then
+      if util.contains(entity.crafting_categories, "recycling") then
         if entity.result_inventory_size < #data.raw.recipe["scrap-recycling"].results then
           entity.result_inventory_size = #data.raw.recipe["scrap-recycling"].results
         end
@@ -2049,7 +2052,7 @@ function util.size_recycler_output()
       end
     end
     for i, entity in pairs(data.raw.furnace) do
-      if util.contains(entity.crafting_categories, "recycling-or-hand-crafting") then
+      if util.contains(entity.crafting_categories, "recycling") then
         if entity.result_inventory_size < most then
           entity.result_inventory_size = most
         end
@@ -2230,7 +2233,7 @@ function util.addtype(name, atint, desc)
   local procreschunk = {
     allow_decomposition = false,
     always_show_products = true,
-    category = reccategory,
+    categories = {reccategory},
     enabled = hiderec,
     energy_required = 5,
     ingredients = {
@@ -2286,7 +2289,7 @@ function util.addtype(name, atint, desc)
   --RECIPE: Processing the asteroid chunks into resource chunks
   local processasteroid = {
     allow_decomposition = false,
-    category = reccategory,
+    categories = {reccategory},
     name = "asteroid-" .. name,
     localised_name = { "recipe-name.asteroid-chunk", { "item-name." .. name } },
     localised_description = { "recipe-description.asteroid-chunk", { "item-name." .. name } },
