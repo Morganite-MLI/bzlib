@@ -1,9 +1,13 @@
 ---------------------------------------------------------------------------------------------------
+Version: 2.1.1
+Date: 07.07.2026
+  Compatibility:
+    - Updated for 2.1
+---------------------------------------------------------------------------------------------------
 Version: 1.2.3
 Date: 10.07.2026
   Bug fixes:
     - Add optional support for me.filename property (Simplifies fixing of settings issues with other mods)
-
 ---------------------------------------------------------------------------------------------------
 Version: 1.2.2
 Date: 07.07.2026
@@ -11,7 +15,6 @@ Date: 07.07.2026
     - Exposed signals for the SE landfill recipes
   Info:
     - Fixed the changelog formatting
-
 ---------------------------------------------------------------------------------------------------
 Version: 1.2.1
 Date: 05.06.2026

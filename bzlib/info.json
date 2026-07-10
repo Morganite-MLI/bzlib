@@ -1,13 +1,13 @@
 {
     "name": "bzlib",
-    "version": "1.2.3",
-    "factorio_version": "2.0",
+    "version": "2.1.1",
+    "factorio_version": "2.1",
     "title": "BZ Lib",
     "description": "Library code for BZ mods",
     "author": "Brevven, cackling fiend, Morganite",
     "homepage": "https://discord.gg/ufvFUJtVwk",
     "dependencies": [
-      "base >= 2.0"
+      "base >= 2.1"
     ]
 }
 
