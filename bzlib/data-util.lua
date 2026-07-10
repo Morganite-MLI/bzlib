@@ -443,7 +443,7 @@ function util.add_fluid_mining()
     {
       type = "technology",
       name = "fluid-mining",
-      icon = "__" .. util.me.name .. "__/graphics/technology/fluid-mining.png",
+      icon = "__" .. (util.me.filename or util.me.name) .. "__/graphics/technology/fluid-mining.png",
       icon_size = 256,
       effects = {
         {
@@ -530,7 +530,7 @@ function util.se_landfill(params)
         type = "recipe",
         icons = {
           { icon = "__base__/graphics/icons/landfill.png", icon_size = 64, icon_mipmaps = 3 },
-          { icon = "__" .. (me and me.name or params.ore) .. "__/graphics/icons/" .. params.ore .. ".png", icon_size = params.icon_size, scale = 0.33 * 64 / params.icon_size },
+          { icon = "__" .. (me and (me.filename or me.name) or params.ore) .. "__/graphics/icons/" .. params.ore .. ".png", icon_size = params.icon_size, scale = 0.33 * 64 / params.icon_size },
         },
         energy_required = 1,
         enabled = false,
@@ -648,7 +648,7 @@ function util.se_matter(params)
           icon_size = 64, scale = 0.5 },
         { icon = "__space-exploration-graphics__/graphics/icons/fluid/particle-stream.png",
           icon_size = 64, scale = 0.33, shift = { 8, -8 } },
-        { icon = "__" .. (me and me.name or params.ore) .. "__/graphics/icons/" .. params.ore .. ".png",
+        { icon = "__" .. (me and (me.filename or me.name) or params.ore) .. "__/graphics/icons/" .. params.ore .. ".png",
           icon_size = params.icon_size, scale = 0.33 * 64 / params.icon_size, shift = { -8, 8 } },
         { icon = "__space-exploration-graphics__/graphics/icons/transition-arrow.png",
           icon_size = 64, scale = 0.5 },
@@ -687,7 +687,7 @@ function util.se_matter(params)
             icon_size = 64, scale = 0.5 },
           { icon = "__space-exploration-graphics__/graphics/icons/fluid/particle-stream.png",
             icon_size = 64, scale = 0.33, shift = { -8, 8 } },
-          { icon = "__" .. (me and me.name or params.ore) .. "__/graphics/icons/" .. params.ore .. ".png",
+          { icon = "__" .. (me and (me.filename or me.name) or params.ore) .. "__/graphics/icons/" .. params.ore .. ".png",
             icon_size = params.icon_size, scale = 0.33 * 64 / params.icon_size, shift = { 8, -8 } },
           { icon = "__space-exploration-graphics__/graphics/icons/transition-arrow.png",
             icon_size = 64, scale = 0.5 },
