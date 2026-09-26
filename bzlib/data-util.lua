@@ -663,8 +663,8 @@ function util.se_matter(params)
       results = {
         { type = "item", name = params.ore, amount = params.quant_out },
         { type = "item", name = "se-contaminated-scrap", amount = 1 },
-        { type = "item", name = sedata, amount = 1, independent_probability = .99 },
-        { type = "item", name = sejunk, amount = 1, independent_probability = .01 },
+        { type = "item", name = sedata, amount = 1, shared_probability = {min = 0, max = 0.99}, ignored_by_stats = 1 },
+        { type = "item", name = sejunk, amount = 1, shared_probability = {min = 0.99, max = 1} },
         { type = "fluid", name = "se-space-coolant-hot", amount = 25, ignored_by_stats = 25, ignored_by_productivity = 25 },
       }
     }
@@ -1149,6 +1149,7 @@ function replace_ingredient(recipe, old, new, amount, multiply)
       end
     end
     local flag = false
+    bzdebug(serpent.block({old, new, amount}))
     for i, ingredient in pairs(recipe.ingredients) do
       if ingredient.name == old then
         flag = true
@@ -1865,7 +1866,7 @@ function decode(data)
 end
 
 function util.create_list()
-  if #me.list > 0 then
+  if me.list and #me.list > 0 then
     if not util.get_item(me.name .. "-list") then
       data:extend({ {
                       type = "item",
@@ -2009,7 +2010,7 @@ function util.sum_products(recipe_name)
       if result.independent_probability then
         amt = amt * result.independent_probability
       end
-      if result.shard_probability then
+      if result.shared_probability then
         amt = amt * (result.shared_probability.max - result.shared_probability.min)
       end
       sum = sum + amt
@@ -2071,7 +2072,7 @@ end
 -- util.prepare_recycling_helper from data.lua
 function util.redo_recycling()
   if mods.quality then
-    local recycling = require("__quality__.prototypes.recycling")
+    local recycling = require("__recycler__.recycling")
     for _, recipe in pairs(data.raw.recipe) do
       if recipe.redo_recycling then
         recycling.generate_recycling_recipe(recipe)
