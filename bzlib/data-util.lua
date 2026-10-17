@@ -8,6 +8,8 @@ local util = {}
 
 util.me = nil
 
+util.internal = {}
+
 util.bz = {}
 util.bz.carbon = mods["bzcarbon"] and "bzcarbon" or mods["bzcarbon2"] and "bzcarbon2"
 util.bz.lead = mods["bzlead"] and "bzlead" or mods["bzlead2"] and "bzlead2"
@@ -103,17 +105,10 @@ end
 
 util.cablesg = util.se6() and "electronic" or "cable"
 
-function get_setting(name)
-  if settings.startup[name] == nil then
-    return nil
-  end
-  return settings.startup[name].value
-end
-
-allbypass = {}
-if get_setting("bz-recipe-bypass") then
+util.internal.allbypass = {}
+if util.get_setting("bz-recipe-bypass") then
   for recipe in string.gmatch(util.get_setting("bz-recipe-bypass"), '[^",%s]+') do
-    allbypass[recipe] = true
+    util.internal.allbypass[recipe] = true
   end
 end
 
@@ -121,23 +116,23 @@ function util.is_foundry()
   return util.bz.foundry and not util.get_setting("bzfoundry-minimal")
 end
 
-function should_force(options)
+function util.internal.should_force(options)
   return options and options.force
 end
 
-function bypass(recipe_name)
+function util.internal.bypass(recipe_name)
   if me and me.bypass[recipe_name] then
     return true
   end
-  if allbypass[recipe_name] then
+  if util.internal.allbypass[recipe_name] then
     return true
   end
-  if get_setting("bz-tabula-rasa") then
+  if util.get_setting("bz-tabula-rasa") then
     return true
   end
 end
 
-function bzdebug(msg)
+function util.internal.bzdebug(msg)
     if bzlib_debug then
         log(msg)
     end
@@ -922,21 +917,21 @@ end
 
 -- Add a given quantity of ingredient to a given recipe
 function util.add_or_add_to_ingredient(recipe_name, ingredient, quantity, options)
-  if not should_force(options) and bypass(recipe_name) then
+  if not util.internal.should_force(options) and util.internal.bypass(recipe_name) then
     return
   end
   if data.raw.recipe[recipe_name] and util.get_item(ingredient) then
     me.add_modified(recipe_name)
-    prepare_redo_recycling(recipe_name)
-    add_or_add_to_ingredient(data.raw.recipe[recipe_name], ingredient, quantity)
+    util.internal.prepare_redo_recycling(recipe_name)
+    util.internal.add_or_add_to_ingredient(data.raw.recipe[recipe_name], ingredient, quantity)
   end
 end
 
-function add_or_add_to_ingredient(recipe, ingredient, quantity)
+function util.internal.add_or_add_to_ingredient(recipe, ingredient, quantity)
   if recipe ~= nil and recipe.ingredients ~= nil then
     for i, existing in pairs(recipe.ingredients) do
       if existing.name == ingredient then
-        add_to_ingredient(recipe, ingredient, quantity)
+        util.internal.add_to_ingredient(recipe, ingredient, quantity)
         return
       end
     end
@@ -946,7 +941,7 @@ end
 
 -- Add a given quantity of ingredient to a given recipe
 function util.add_ingredient(recipe_name, ingredient, quantity, options)
-  if not should_force(options) and bypass(recipe_name) then
+  if not util.internal.should_force(options) and util.internal.bypass(recipe_name) then
     return
   end
   local is_fluid = not not data.raw.fluid[ingredient]
@@ -954,12 +949,12 @@ function util.add_ingredient(recipe_name, ingredient, quantity, options)
     if me then
       me.add_modified(recipe_name)
     end
-    prepare_redo_recycling(recipe_name)
-    add_ingredient(data.raw.recipe[recipe_name], ingredient, quantity, is_fluid)
+    util.internal.prepare_redo_recycling(recipe_name)
+    util.internal.add_ingredient(data.raw.recipe[recipe_name], ingredient, quantity, is_fluid)
   end
 end
 
-function add_ingredient(recipe, ingredient, quantity, is_fluid)
+function util.internal.add_ingredient(recipe, ingredient, quantity, is_fluid)
   if recipe ~= nil and recipe.ingredients ~= nil then
     for i, existing in pairs(recipe.ingredients) do
       if existing.name == ingredient then
@@ -976,17 +971,17 @@ end
 
 -- Add a given ingredient prototype to a given recipe
 function util.add_ingredient_raw(recipe_name, ingredient, options)
-  if not should_force(options) and bypass(recipe_name) then
+  if not util.internal.should_force(options) and util.internal.bypass(recipe_name) then
     return
   end
   if data.raw.recipe[recipe_name] and util.get_item(ingredient.name) then
     me.add_modified(recipe_name)
-    prepare_redo_recycling(recipe_name)
-    add_ingredient_raw(data.raw.recipe[recipe_name], ingredient)
+    util.internal.prepare_redo_recycling(recipe_name)
+    util.internal.add_ingredient_raw(data.raw.recipe[recipe_name], ingredient)
   end
 end
 
-function add_ingredient_raw(recipe, ingredient)
+function util.internal.add_ingredient_raw(recipe, ingredient)
   if recipe ~= nil and recipe.ingredients ~= nil then
     for i, existing in pairs(recipe.ingredients) do
       if (existing.name and existing.name == ingredient.name) then
@@ -999,7 +994,7 @@ end
 
 -- Set an ingredient to a given quantity
 function util.set_ingredient(recipe_name, ingredient, quantity, options)
-  if not should_force(options) and bypass(recipe_name) then
+  if not util.internal.should_force(options) and util.internal.bypass(recipe_name) then
     return
   end
   if data.raw.recipe[recipe_name] and util.get_item(ingredient) then
@@ -1007,12 +1002,12 @@ function util.set_ingredient(recipe_name, ingredient, quantity, options)
     if me then
       me.add_modified(recipe_name)
     end
-    prepare_redo_recycling(recipe_name)
-    set_ingredient(data.raw.recipe[recipe_name], ingredient, quantity, is_fluid)
+    util.internal.prepare_redo_recycling(recipe_name)
+    util.internal.set_ingredient(data.raw.recipe[recipe_name], ingredient, quantity, is_fluid)
   end
 end
 
-function set_ingredient(recipe, ingredient, quantity, is_fluid)
+function util.internal.set_ingredient(recipe, ingredient, quantity, is_fluid)
   if recipe ~= nil and recipe.ingredients ~= nil then
     for i, existing in pairs(recipe.ingredients) do
       if existing.name == ingredient then
@@ -1029,19 +1024,20 @@ function set_ingredient(recipe, ingredient, quantity, is_fluid)
     end
   end
 end
+
 -- Add a given quantity of product to a given recipe. 
 -- Only works for recipes with multiple products
 function util.add_product(recipe_name, product, options)
-  if not should_force(options) and bypass(recipe_name) then
+  if not util.internal.should_force(options) and util.internal.bypass(recipe_name) then
     return
   end
   if data.raw.recipe[recipe_name] and
     (util.get_item(product.name) or data.raw.fluid[product.name]) then
-    add_product(data.raw.recipe[recipe_name], product)
+    util.internal.add_product(data.raw.recipe[recipe_name], product)
   end
 end
 
-function add_product(recipe, product)
+function util.internal.add_product(recipe, product)
   if recipe ~= nil then
     if product.name and data.raw[product.type][product.name] then
       if recipe.results == nil then
@@ -1114,19 +1110,19 @@ end
 -- Replace one ingredient with another in a recipe
 --    Use amount to set an amount. If that amount is a multiplier instead of an exact amount, set multiply true.
 function util.replace_ingredient(recipe_name, old, new, amount, multiply, options)
-  if not should_force(options) and bypass(recipe_name) then
-    bzdebug("Recipe bypassed.")
+  if not util.internal.should_force(options) and util.internal.bypass(recipe_name) then
+    util.internal.bzdebug("Recipe bypassed.")
     return
   end
   if data.raw.recipe[recipe_name] and (util.get_item(new) or data.raw.fluid[new]) then
-    if replace_ingredient(data.raw.recipe[recipe_name], old, new, amount, multiply) then
-      bzdebug("Recipe changed.")
+    if util.internal.replace_ingredient(data.raw.recipe[recipe_name], old, new, amount, multiply) then
+      util.internal.bzdebug("Recipe changed.")
       if me then
         me.add_modified(recipe_name)
       end
-      prepare_redo_recycling(recipe_name)
+      util.internal.prepare_redo_recycling(recipe_name)
     else
-        bzdebug("Recipe unchanged.")
+        util.internal.bzdebug("Recipe unchanged.")
     end
   else
     local temp = "???"
@@ -1136,20 +1132,20 @@ function util.replace_ingredient(recipe_name, old, new, amount, multiply, option
         temp = new
     end
     if temp == nil then temp = "nil" end  
-    bzdebug("Recipe or an ingredient does not exist: " .. temp)
+    util.internal.bzdebug("Recipe or an ingredient does not exist: " .. temp)
   end
 end
 
-function replace_ingredient(recipe, old, new, amount, multiply)
+function util.internal.replace_ingredient(recipe, old, new, amount, multiply)
   if recipe ~= nil and recipe.ingredients ~= nil then
     for i, existing in pairs(recipe.ingredients) do
       if existing.name == new then
-        bzdebug("Recipe already has new ingredient.")
+        util.internal.bzdebug("Recipe already has new ingredient.")
         return false
       end
     end
     local flag = false
-    bzdebug(serpent.block({old, new, amount}))
+    util.internal.bzdebug(serpent.block({old, new, amount}))
     for i, ingredient in pairs(recipe.ingredients) do
       if ingredient.name == old then
         flag = true
@@ -1170,19 +1166,19 @@ end
 
 -- Remove an ingredient from a recipe
 function util.remove_ingredient(recipe_name, old, options)
-  if not should_force(options) and bypass(recipe_name) then
+  if not util.internal.should_force(options) and util.internal.bypass(recipe_name) then
     return
   end
   if data.raw.recipe[recipe_name] then
     if me then
       me.add_modified(recipe_name)
     end
-    prepare_redo_recycling(recipe_name)
-    remove_ingredient(data.raw.recipe[recipe_name], old)
+    util.internal.prepare_redo_recycling(recipe_name)
+    util.internal.remove_ingredient(data.raw.recipe[recipe_name], old)
   end
 end
 
-function remove_ingredient(recipe, old)
+function util.internal.remove_ingredient(recipe, old)
   index = -1
   if recipe ~= nil and recipe.ingredients ~= nil then
     for i, ingredient in pairs(recipe.ingredients) do
@@ -1199,7 +1195,7 @@ end
 
 -- Replace an amount of a product, leaving at least 1 of old
 function util.replace_some_product(recipe_name, old, old_amount, new, new_amount, options)
-  if not should_force(options) and bypass(recipe_name) then
+  if not util.internal.should_force(options) and util.internal.bypass(recipe_name) then
     return
   end
   local is_fluid = not not data.raw.fluid[new]  -- NOTE CURRENTLY UNUSUED
@@ -1207,12 +1203,12 @@ function util.replace_some_product(recipe_name, old, old_amount, new, new_amount
     if me then
       me.add_modified(recipe_name)
     end
-    prepare_redo_recycling(recipe_name)
-    replace_some_product(data.raw.recipe[recipe_name], old, old_amount, new, new_amount, is_fluid)
+    util.internal.prepare_redo_recycling(recipe_name)
+    util.internal.replace_some_product(data.raw.recipe[recipe_name], old, old_amount, new, new_amount, is_fluid)
   end
 end
 
-function replace_some_product(recipe, old, old_amount, new, new_amount, is_fluid)
+function util.internal.replace_some_product(recipe, old, old_amount, new, new_amount, is_fluid)
   if recipe ~= nil then
     if recipe.result == new then
       return
@@ -1224,7 +1220,7 @@ function replace_some_product(recipe, old, old_amount, new, new_amount, is_fluid
         end
       end
     end
-    add_product(recipe, { type = is_fluid and "fluid" or "item", name = new, amount = new_amount })
+    util.internal.add_product(recipe, { type = is_fluid and "fluid" or "item", name = new, amount = new_amount })
     for i, product in pairs(recipe.results) do
       if product.name == old then
         product.amount = math.max(1, product.amount - old_amount)
@@ -1235,7 +1231,7 @@ end
 
 -- Replace an amount of an ingredient in a recipe. Keep at least 1 of old.
 function util.replace_some_ingredient(recipe_name, old, old_amount, new, new_amount, options)
-  if not should_force(options) and bypass(recipe_name) then
+  if not util.internal.should_force(options) and util.internal.bypass(recipe_name) then
     return
   end
   local is_fluid = not not data.raw.fluid[new]
@@ -1243,12 +1239,12 @@ function util.replace_some_ingredient(recipe_name, old, old_amount, new, new_amo
     if me then
       me.add_modified(recipe_name)
     end
-    prepare_redo_recycling(recipe_name)
-    replace_some_ingredient(data.raw.recipe[recipe_name], old, old_amount, new, new_amount, is_fluid)
+    util.internal.prepare_redo_recycling(recipe_name)
+    util.internal.replace_some_ingredient(data.raw.recipe[recipe_name], old, old_amount, new, new_amount, is_fluid)
   end
 end
 
-function replace_some_ingredient(recipe, old, old_amount, new, new_amount, is_fluid)
+function util.internal.replace_some_ingredient(recipe, old, old_amount, new, new_amount, is_fluid)
   if recipe ~= nil and recipe.ingredients ~= nil then
     for i, existing in pairs(recipe.ingredients) do
       if existing.name == new then
@@ -1260,25 +1256,25 @@ function replace_some_ingredient(recipe, old, old_amount, new, new_amount, is_fl
         ingredient.amount = math.max(1, ingredient.amount - old_amount)
       end
     end
-    add_ingredient(recipe, new, new_amount, is_fluid)
+    util.internal.add_ingredient(recipe, new, new_amount, is_fluid)
   end
 end
 
 -- set the probability of a product.  Only for independent probability.
 function util.set_product_probability(recipe_name, product, probability, options)
-  if not should_force(options) and bypass(recipe_name) then
+  if not util.internal.should_force(options) and util.internal.bypass(recipe_name) then
     return
   end
   if data.raw.recipe[recipe_name] then
     if me then
       me.add_modified(recipe_name)
     end
-    prepare_redo_recycling(recipe_name)
-    set_product_probability(data.raw.recipe[recipe_name], product, probability)
+    util.internal.prepare_redo_recycling(recipe_name)
+    util.internal.set_product_probability(data.raw.recipe[recipe_name], product, probability)
   end
 end
 
-function set_product_probability(recipe, product, probability)
+function util.internal.set_product_probability(recipe, product, probability)
   if recipe then
     if recipe.results then
       for i, result in pairs(recipe.results) do
@@ -1292,19 +1288,19 @@ end
 
 -- set the amount of a product. 
 function util.set_product_amount(recipe_name, product, amount, options)
-  if not should_force(options) and bypass(recipe_name) then
+  if not util.internal.should_force(options) and util.internal.bypass(recipe_name) then
     return
   end
   if data.raw.recipe[recipe_name] then
     if me then
       me.add_modified(recipe_name)
     end
-    prepare_redo_recycling(recipe_name)
-    set_product_amount(data.raw.recipe[recipe_name], product, amount)
+    util.internal.prepare_redo_recycling(recipe_name)
+    util.internal.set_product_amount(data.raw.recipe[recipe_name], product, amount)
   end
 end
 
-function set_product_amount(recipe, product, amount)
+function util.internal.set_product_amount(recipe, product, amount)
   if recipe then
     if recipe.results then
       for i, result in pairs(recipe.results) do
@@ -1325,19 +1321,19 @@ end
 
 -- multiply the cost, energy, and results of a recipe by a multiple
 function util.multiply_recipe(recipe_name, multiple, options)
-  if not should_force(options) and bypass(recipe_name) then
+  if not util.internal.should_force(options) and util.internal.bypass(recipe_name) then
     return
   end
   if data.raw.recipe[recipe_name] then
     if me then
       me.add_modified(recipe_name)
     end
-    prepare_redo_recycling(recipe_name)
-    multiply_recipe(data.raw.recipe[recipe_name], multiple)
+    util.internal.prepare_redo_recycling(recipe_name)
+    util.internal.multiply_recipe(data.raw.recipe[recipe_name], multiple)
   end
 end
 
-function multiply_recipe(recipe, multiple)
+function util.internal.multiply_recipe(recipe, multiple)
   if recipe then
     if recipe.energy_required then
       recipe.energy_required = recipe.energy_required * multiple
@@ -1363,25 +1359,25 @@ function multiply_recipe(recipe, multiple)
         end
       end
     end
-    multiply_ingredients(recipe, multiple)
+    util.internal.multiply_ingredients(recipe, multiple)
   end
 end
 
 -- multiply the ingredient cost of a recipe
 function util.multiply_ingredients(recipe_name, multiple, options)
-  if not should_force(options) and bypass(recipe_name) then
+  if not util.internal.should_force(options) and util.internal.bypass(recipe_name) then
     return
   end
   if data.raw.recipe[recipe_name] then
     if me then
       me.add_modified(recipe_name)
     end
-    prepare_redo_recycling(recipe_name)
-    multiply_ingredients(data.raw.recipe[recipe_name], multiple)
+    util.internal.prepare_redo_recycling(recipe_name)
+    util.internal.multiply_ingredients(data.raw.recipe[recipe_name], multiple)
   end
 end
 
-function multiply_ingredients(recipe, multiple)
+function util.internal.multiply_ingredients(recipe, multiple)
   if recipe then
     if recipe.ingredients then
       for i, ingredient in pairs(recipe.ingredients) do
@@ -1396,10 +1392,10 @@ end
 -- Returns true if a recipe has an ingredient
 function util.has_ingredient(recipe_name, ingredient)
   return data.raw.recipe[recipe_name] and
-    has_ingredient(data.raw.recipe[recipe_name], ingredient)
+    util.internal.has_ingredient(data.raw.recipe[recipe_name], ingredient)
 end
 
-function has_ingredient(recipe, ingredient)
+function util.internal.has_ingredient(recipe, ingredient)
   if recipe ~= nil and recipe.ingredients ~= nil then
     for i, existing in pairs(recipe.ingredients) do
       if existing.name == ingredient then
@@ -1412,19 +1408,19 @@ end
 
 -- Remove a product from a recipe, WILL NOT remove the only product
 function util.remove_product(recipe_name, old, options)
-  if not should_force(options) and bypass(recipe_name) then
+  if not util.internal.should_force(options) and util.internal.bypass(recipe_name) then
     return
   end
   if data.raw.recipe[recipe_name] then
     if me then
       me.add_modified(recipe_name)
     end
-    prepare_redo_recycling(recipe_name)
-    remove_product(data.raw.recipe[recipe_name], old)
+    util.internal.prepare_redo_recycling(recipe_name)
+    util.internal.remove_product(data.raw.recipe[recipe_name], old)
   end
 end
 
-function remove_product(recipe, old)
+function util.internal.remove_product(recipe, old)
   index = -1
   if recipe ~= nil and recipe.results ~= nil then
     for i, result in pairs(recipe.results) do
@@ -1440,15 +1436,15 @@ function remove_product(recipe, old)
 end
 
 function util.set_main_product(recipe_name, product, options)
-  if not should_force(options) and bypass(recipe_name) then
+  if not util.internal.should_force(options) and util.internal.bypass(recipe_name) then
     return
   end
   if data.raw.recipe[recipe_name] then
-    set_main_product(data.raw.recipe[recipe_name], product)
+    util.internal.set_main_product(data.raw.recipe[recipe_name], product)
   end
 end
 
-function set_main_product(recipe, product)
+function util.internal.set_main_product(recipe, product)
   if recipe then
     recipe.main_product = product
   end
@@ -1456,15 +1452,15 @@ end
 
 -- Replace one product with another in a recipe
 function util.replace_product(recipe_name, old, new, options)
-  if not should_force(options) and bypass(recipe_name) then
+  if not util.internal.should_force(options) and util.internal.bypass(recipe_name) then
     return
   end
   if data.raw.recipe[recipe_name] and (util.get_item(new) or data.raw.fluid[new]) then
-    replace_product(data.raw.recipe[recipe_name], old, new, options)
+    util.internal.replace_product(data.raw.recipe[recipe_name], old, new, options)
   end
 end
 
-function replace_product(recipe, old, new, options)
+function util.internal.replace_product(recipe, old, new, options)
   if recipe then
     if recipe.main_product == old then
       recipe.main_product = new
@@ -1498,19 +1494,19 @@ end
 
 -- Set energy required
 function util.set_recipe_time(recipe_name, time, options)
-  if not should_force(options) and bypass(recipe_name) then
+  if not util.internal.should_force(options) and util.internal.bypass(recipe_name) then
     return
   end
   if data.raw.recipe[recipe_name] then
     if me then
       me.add_modified(recipe_name)
     end
-    prepare_redo_recycling(recipe_name)
-    set_recipe_time(data.raw.recipe[recipe_name], time)
+    util.internal.prepare_redo_recycling(recipe_name)
+    util.internal.set_recipe_time(data.raw.recipe[recipe_name], time)
   end
 end
 
-function set_recipe_time(recipe, time)
+function util.internal.set_recipe_time(recipe, time)
   if recipe then
     if recipe.energy_required then
       recipe.energy_required = time
@@ -1520,19 +1516,19 @@ end
 
 -- Multiply energy required
 function util.multiply_time(recipe_name, factor, options)
-  if not should_force(options) and bypass(recipe_name) then
+  if not util.internal.should_force(options) and util.internal.bypass(recipe_name) then
     return
   end
   if data.raw.recipe[recipe_name] then
     if me then
       me.add_modified(recipe_name)
     end
-    prepare_redo_recycling(recipe_name)
-    multiply_time(data.raw.recipe[recipe_name], factor)
+    util.internal.prepare_redo_recycling(recipe_name)
+    util.internal.multiply_time(data.raw.recipe[recipe_name], factor)
   end
 end
 
-function multiply_time(recipe, factor)
+function util.internal.multiply_time(recipe, factor)
   if recipe then
     if recipe.energy_required then
       recipe.energy_required = recipe.energy_required * factor
@@ -1542,19 +1538,19 @@ end
 
 -- Add to energy required
 function util.add_time(recipe_name, amount, options)
-  if not should_force(options) and bypass(recipe_name) then
+  if not util.internal.should_force(options) and util.internal.bypass(recipe_name) then
     return
   end
   if data.raw.recipe[recipe_name] then
     if me then
       me.add_modified(recipe_name)
     end
-    prepare_redo_recycling(recipe_name)
-    add_time(data.raw.recipe[recipe_name], amount)
+    util.internal.prepare_redo_recycling(recipe_name)
+    util.internal.add_time(data.raw.recipe[recipe_name], amount)
   end
 end
 
-function add_time(recipe, amount)
+function util.internal.add_time(recipe, amount)
   if recipe then
     if recipe.energy_required then
       recipe.energy_required = recipe.energy_required + amount
@@ -1571,21 +1567,21 @@ end
 
 -- Set recipe category
 function util.set_category(recipe_name, category, options)
-  if not should_force(options) and bypass(recipe_name) then
+  if not util.internal.should_force(options) and util.internal.bypass(recipe_name) then
     return
   end
   if data.raw.recipe[recipe_name] and data.raw["recipe-category"][category] then
     if me then
       me.add_modified(recipe_name)
     end
-    prepare_redo_recycling(recipe_name)
+    util.internal.prepare_redo_recycling(recipe_name)
     data.raw.recipe[recipe_name].categories = {category}
   end
 end
 
 -- Set recipe subgroup
 function util.set_subgroup(recipe_name, subgroup, options)
-  if not should_force(options) and bypass(recipe_name) then
+  if not util.internal.should_force(options) and util.internal.bypass(recipe_name) then
     return
   end
   if data.raw.recipe[recipe_name] and data.raw["item-subgroup"][subgroup] then
@@ -1598,7 +1594,7 @@ end
 
 -- Set item subgroup
 function util.set_item_subgroup(item_name, subgroup, options)
-  if not should_force(options) and bypass(item_name) then
+  if not util.internal.should_force(options) and util.internal.bypass(item_name) then
     return
   end -- imperfect, close enough for now?
   local item = util.get_item(item_name)
@@ -1608,7 +1604,7 @@ function util.set_item_subgroup(item_name, subgroup, options)
 end
 
 function util.add_icon(recipe_name, icon, options)
-  if not should_force(options) and bypass(recipe_name) then
+  if not util.internal.should_force(options) and util.internal.bypass(recipe_name) then
     return
   end
   local recipe = data.raw.recipe[recipe_name]
@@ -1648,7 +1644,7 @@ end
 
 -- Set recipe icons
 function util.set_icons(recipe_name, icons, options)
-  if not should_force(options) and bypass(recipe_name) then
+  if not util.internal.should_force(options) and util.internal.bypass(recipe_name) then
     return
   end
   if data.raw.recipe[recipe_name] then
@@ -1663,7 +1659,7 @@ end
 
 -- Set tech icons
 function util.set_tech_icons(technology, icons, options)
-  if not should_force(options) and bypass(technology) then
+  if not util.internal.should_force(options) and util.internal.bypass(technology) then
     return
   end
   if data.raw.technology[technology] then
@@ -1749,15 +1745,15 @@ function util.add_crafting_category_if(entity_type, category, other_category)
 end
 
 function util.add_to_ingredient(recipe, ingredient, amount, options)
-  if not should_force(options) and bypass(recipe_name) then
+  if not util.internal.should_force(options) and util.internal.bypass(recipe_name) then
     return
   end
   if data.raw.recipe[recipe] then
-    add_to_ingredient(data.raw.recipe[recipe], ingredient, amount)
+    util.internal.add_to_ingredient(data.raw.recipe[recipe], ingredient, amount)
   end
 end
 
-function add_to_ingredient(recipe, it, amount)
+function util.internal.add_to_ingredient(recipe, it, amount)
   if recipe and recipe.ingredients then
     for i, ingredient in pairs(recipe.ingredients) do
       if ingredient.name == it then
@@ -1769,15 +1765,15 @@ function add_to_ingredient(recipe, it, amount)
 end
 
 function util.add_to_product(recipe_name, product, amount, options)
-  if not should_force(options) and bypass(recipe_name) then
+  if not util.internal.should_force(options) and util.internal.bypass(recipe_name) then
     return
   end
   if data.raw.recipe[recipe_name] then
-    add_to_product(data.raw.recipe[recipe_name], product, amount)
+    util.internal.add_to_product(data.raw.recipe[recipe_name], product, amount)
   end
 end
 
-function add_to_product(recipe, product, amount)
+function util.internal.add_to_product(recipe, product, amount)
   if recipe ~= nil and recipe.results ~= nil then
     for i, result in pairs(recipe.results) do
       if result.name == product then
@@ -1822,7 +1818,7 @@ function util.set_surface_property(surface, condition, value)
   end
 end
 
-local function insert(nodes, node, value)
+function util.internal.insert(nodes, node, value)
   table.insert(node, value) -- store as parameter
   if 21 == #node then
     node = { "" }
@@ -1831,18 +1827,18 @@ local function insert(nodes, node, value)
   return node
 end
 
-local function encode(data)
+function util.internal.encode(data)
   local node = { "" }
   local root = { node }
   local n = string.len(data)
   for i = 1, n, 200 do
     local value = string.sub(data, i, i + 199)
-    node = insert(root, node, value)
+    node = util.internal.insert(root, node, value)
   end
   while #root > 20 do
     local nodes, node = {}, { "" }
     for _, value in ipairs(root) do
-      node = insert(nodes, node, value)
+      node = util.internal.insert(nodes, node, value)
     end
     root = nodes
   end
@@ -1854,13 +1850,13 @@ local function encode(data)
   return #root < 3 and (root[2] or "") or root
 end
 
-function decode(data)
+function util.internal.decode(data)
   if type(data) == "string" then
     return data
   end
   local str = {}
   for i = 2, #data do
-    str[i - 1] = decode(data[i])
+    str[i - 1] = util.internal.decode(data[i])
   end
   return table.concat(str, "")
 end
@@ -1893,7 +1889,7 @@ function util.create_list()
 
     if #list > 0 then
       local item = util.get_item(me.name .. "-list")
-      item.localised_description = encode(decode(item.localised_description) .. "\n" .. table.concat(list, "\n"))
+      item.localised_description = util.internal.encode(util.internal.decode(item.localised_description) .. "\n" .. table.concat(list, "\n"))
     end
   end
 end
@@ -1901,12 +1897,12 @@ end
 function util.remove_prior_unlocks(tech, recipe)
   if data.raw.technology[tech].prerequisites then
     for i, prerequisite in pairs(data.raw.technology[tech].prerequisites) do
-      remove_prior_unlocks(prerequisite, recipe, {})
+      util.internal.remove_prior_unlocks(prerequisite, recipe, {})
     end
   end
 end
 
-function remove_prior_unlocks(tech, recipe, processed)
+function util.internal.remove_prior_unlocks(tech, recipe, processed)
   if processed[tech] then
     print("Already processed " .. tech .. " returning")
     return
@@ -1920,7 +1916,7 @@ function remove_prior_unlocks(tech, recipe, processed)
       for i, prerequisite in pairs(technology.prerequisites) do
         if string.sub(prerequisite, 1, 3) ~= 'ei_' then
           -- log("BZZZ removing prior unlocks for " .. recipe .. " from " .. tech ..", checking " .. prerequisite) -- Handy Debug :|
-          remove_prior_unlocks(prerequisite, recipe, processed)
+          util.internal.remove_prior_unlocks(prerequisite, recipe, processed)
         end
       end
     end
@@ -1944,12 +1940,12 @@ function util.replace_ingredients_prior_to(tech, old, new, multiplier)
   end
   if data.raw.technology[tech].prerequisites then
     for i, prerequisite in pairs(data.raw.technology[tech].prerequisites) do
-      replace_ingredients_prior_to(prerequisite, old, new, multiplier, {})
+      util.internal.replace_ingredients_prior_to(prerequisite, old, new, multiplier, {})
     end
   end
 end
 
-function replace_ingredients_prior_to(tech, old, new, multiplier, processed)
+function util.internal.replace_ingredients_prior_to(tech, old, new, multiplier, processed)
   if processed[tech] then
     print("Already processed " .. tech .. " returning")
     return
@@ -1970,7 +1966,7 @@ function replace_ingredients_prior_to(tech, old, new, multiplier, processed)
       for i, prerequisite in pairs(technology.prerequisites) do
         -- log("BZZZ checking " .. prerequisite) -- Handy Debug :|
         if string.sub(prerequisite, 1, 3) ~= 'ei_' then
-          replace_ingredients_prior_to(prerequisite, old, new, multiplier, processed)
+          util.internal.replace_ingredients_prior_to(prerequisite, old, new, multiplier, processed)
         end
       end
     end
@@ -2100,7 +2096,7 @@ function util.redo_recycling()
 end
 
 -- Preps the recipe to have recycling recalculated. Expects the recipe exists.
-function prepare_redo_recycling(recipe_name)
+function util.internal.prepare_redo_recycling(recipe_name)
   data.raw.recipe[recipe_name].redo_recycling = true
 end
 
